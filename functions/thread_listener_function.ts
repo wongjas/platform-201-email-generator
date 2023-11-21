@@ -1,9 +1,12 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import {
-  ChatCompletionMessage,
-  OpenAI,
-} from "https://deno.land/x/openai/mod.ts";
+import Anthropic from "npm:@anthropic-ai/sdk";
 
+/**
+ * Functions are reusable building blocks of automation that accept
+ * inputs, perform calculations, and provide outputs. Functions can
+ * be used independently or as steps in workflows.
+ * https://api.slack.com/automation/functions/custom
+ */
 export const ListenerDefinition = DefineFunction({
   callback_id: "listener_function",
   title: "listener text using AI",
@@ -56,38 +59,32 @@ export default SlackFunction(
       console.error(conversationResponse.error);
     }
 
-    const openai = new OpenAI(
-      env.OPENAI_API_KEY,
-    );
+    let prompt = "";
 
-    let messages: ChatCompletionMessage[] = [
-      {
-        "role": "system",
-        "content": `You are a helpful assistant.`,
-      },
-    ];
+    const anthropic = new Anthropic({
+      apiKey: env.ANTHROPIC_API_KEY,
+    });
 
     for (let i = 1; i < conversationResponse.messages.length; i++) { // Start at 1, the first message is the file
       if (conversationResponse.messages[i] != inputs.bot_id) {
-        messages.push({
-          "role": "user",
-          "content": `${conversationResponse.messages[i].text}`,
-        });
+        prompt += `${Anthropic.HUMAN_PROMPT}${
+          conversationResponse.messages[i].text
+        }`;
       } else {
-        messages.push({
-          "role": "assistant",
-          "content": `${conversationResponse.messages[i].text}`,
-        });
+        prompt += `${Anthropic.AI_PROMPT}${
+          conversationResponse.messages[i].text
+        }`;
       }
     }
 
-    const chatCompletion = await openai.createChatCompletion({
-      messages: messages,
-      model: "gpt-3.5-turbo",
+    const completion = await anthropic.completions.create({
+      model: "claude-2",
+      max_tokens_to_sample: 300,
+      prompt: prompt.concat(Anthropic.AI_PROMPT),
     });
 
     // 3. Update "thinking" message with AI model contents
-    const completionContent = chatCompletion.choices[0].message.content;
+    const completionContent = completion.completion;
 
     const updateResponse = await client.chat.update({
       channel: inputs.channel_id,

@@ -1,7 +1,7 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import { OpenAI } from "https://deno.land/x/openai/mod.ts";
 import { TriggerEventTypes, TriggerTypes } from "deno-slack-api/mod.ts";
 import ThreadWorkflow from "../workflows/thread_workflow.ts";
+import Anthropic from "npm:@anthropic-ai/sdk";
 
 export const EmailListenerFunction = DefineFunction({
   callback_id: "email_listener_function",
@@ -56,23 +56,19 @@ export default SlackFunction(
 
     const email_text = historyResponse.messages[0].files[0].plain_text;
 
-    const openai = new OpenAI(
-      env.OPENAI_API_KEY,
-    );
-
-    const chatCompletion = await openai.createChatCompletion({
-      messages: [
-        {
-          "role": "system",
-          "content":
-            `You are a helpful assistant. Please write a response to the following email in 100 words:`,
-        },
-        { "role": "user", "content": `${email_text}` },
-      ],
-      model: "gpt-3.5-turbo",
+    const anthropic = new Anthropic({
+      apiKey: env.ANTHROPIC_API_KEY,
     });
 
-    const completionContent = chatCompletion.choices[0].message.content;
+    const completion = await anthropic.completions.create({
+      model: "claude-2",
+      max_tokens_to_sample: 300,
+      prompt:
+        `${Anthropic.HUMAN_PROMPT} Please write a response to the following email in 100 words with greetings 
+        <email>${email_text}</email>. Do not add tags, comment on your response or mention the number of words.${Anthropic.AI_PROMPT}`,
+    });
+
+    const completionContent = completion.completion;
 
     // 3. Update the "thinking" message to the AI model's response
     const updateResponse = await client.chat.update({
