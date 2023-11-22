@@ -10,7 +10,7 @@ const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
   workflow: `#/workflows/${EmailWorkflow.definition.callback_id}`,
   event: {
     event_type: TriggerEventTypes.MessagePosted,
-    channel_ids: ["C062TGFHW05"], // TODO: Must set this to an internal channel
+    channel_ids: ["C000000000"], // TODO: Must set this to an internal channel
     filter: {
       version: 1,
       root: {
