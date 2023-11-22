@@ -1,5 +1,5 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import { OpenAI } from "https://deno.land/x/openai/mod.ts";
+import OpenAI from 'https://deno.land/x/openai@v4.19.1/mod.ts';
 import { TriggerEventTypes, TriggerTypes } from "deno-slack-api/mod.ts";
 import ThreadWorkflow from "../workflows/thread_workflow.ts";
 
@@ -56,11 +56,12 @@ export default SlackFunction(
 
     const email_text = historyResponse.messages[0].files[0].plain_text;
 
-    const openai = new OpenAI(
-      env.OPENAI_API_KEY,
+    const openai = new OpenAI({
+      apiKey: env.OPENAI_API_KEY,
+    }
     );
 
-    const chatCompletion = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       messages: [
         {
           "role": "system",

@@ -1,8 +1,7 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import {
-  ChatCompletionMessage,
-  OpenAI,
-} from "https://deno.land/x/openai/mod.ts";
+import OpenAI from 'https://deno.land/x/openai@v4.19.1/mod.ts';
+import { ChatCompletionMessageParam } from "https://deno.land/x/openai@v4.19.1/resources/mod.ts";
+
 
 export const ListenerDefinition = DefineFunction({
   callback_id: "listener_function",
@@ -56,11 +55,11 @@ export default SlackFunction(
       console.error(conversationResponse.error);
     }
 
-    const openai = new OpenAI(
-      env.OPENAI_API_KEY,
-    );
+    const openai = new OpenAI({
+      apiKey: env.OPENAI_API_KEY,
+  });
 
-    let messages: ChatCompletionMessage[] = [
+    let messages: ChatCompletionMessageParam[] = [
       {
         "role": "system",
         "content": `You are a helpful assistant.`,
@@ -81,7 +80,7 @@ export default SlackFunction(
       }
     }
 
-    const chatCompletion = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       messages: messages,
       model: "gpt-3.5-turbo",
     });
