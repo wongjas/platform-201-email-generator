@@ -1,7 +1,6 @@
 import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
-import OpenAI from 'https://deno.land/x/openai@v4.19.1/mod.ts';
-import { ChatCompletionMessageParam } from "https://deno.land/x/openai@v4.19.1/resources/mod.ts";
-
+import OpenAI from "openai/mod.ts";
+import { ChatCompletionMessageParam } from "openai/resources/mod.ts";
 
 export const ListenerDefinition = DefineFunction({
   callback_id: "listener_function",
@@ -57,7 +56,7 @@ export default SlackFunction(
 
     const openai = new OpenAI({
       apiKey: env.OPENAI_API_KEY,
-  });
+    });
 
     let messages: ChatCompletionMessageParam[] = [
       {
